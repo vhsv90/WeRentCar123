@@ -1,10 +1,14 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using WeRentCar123.Models;
+using WeRentCar123.Models.DB;
+using WeRentCar123.Models.Manager;
+using WeRentCar123.Models.Repository;
 
 namespace WeRentCar123
 {
@@ -17,12 +21,17 @@ namespace WeRentCar123
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-            // In production, the React files will be served from this directory
+            services.AddDbContext<AppContext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("WeRentCar123"))
+            );
+
+            services.AddScoped<IDataRepository<Clients>, ClientsManager>();
+            services.AddScoped<IDataRepository<Vehicles>, VehiclesManager>();
+
             services.AddSpaStaticFiles(configuration =>
             {
                 configuration.RootPath = "ClientApp/build";
