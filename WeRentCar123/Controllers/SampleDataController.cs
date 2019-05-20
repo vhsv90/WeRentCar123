@@ -18,7 +18,7 @@ namespace WeRentCar123.Controllers
         public IEnumerable<WeatherForecast> WeatherForecasts(int startDateIndex)
         {
             var rng = new Random();
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+                return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 DateFormatted = DateTime.Now.AddDays(index + startDateIndex).ToString("d"),
                 TemperatureC = rng.Next(-20, 55),
