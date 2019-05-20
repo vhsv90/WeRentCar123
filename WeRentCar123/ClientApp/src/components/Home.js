@@ -1,23 +1,132 @@
-import React from 'react';
+import React, { Component } from 'react';
+import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
+import { actionCreators } from '../store/HomeStore';
+import {
+    Card, CardImg, CardBody, CardTitle, CardSubtitle, Button, Container, Row, Col,
+    CardText, Modal, ModalHeader, ModalFooter, ModalBody, Form, FormGroup, Label, Input,
+} from 'reactstrap';
 
-const Home = props => (
-  <div>
-    <h1>Hello, world!</h1>
-    <p>Welcome to your new single-page application, built with:</p>
-    <ul>
-      <li><a href='https://get.asp.net/'>ASP.NET Core</a> and <a href='https://msdn.microsoft.com/en-us/library/67ef8sbd.aspx'>C#</a> for cross-platform server-side code</li>
-      <li><a href='https://facebook.github.io/react/'>React</a> and <a href='https://redux.js.org/'>Redux</a> for client-side code</li>
-      <li><a href='http://getbootstrap.com/'>Bootstrap</a> for layout and styling</li>
-    </ul>
-    <p>To help you get started, we've also set up:</p>
-    <ul>
-      <li><strong>Client-side navigation</strong>. For example, click <em>Counter</em> then <em>Back</em> to return here.</li>
-      <li><strong>Development server integration</strong>. In development mode, the development server from <code>create-react-app</code> runs in the background automatically, so your client-side resources are dynamically built on demand and the page refreshes when you modify any file.</li>
-      <li><strong>Efficient production builds</strong>. In production mode, development-time features are disabled, and your <code>dotnet publish</code> configuration produces minified, efficiently bundled JavaScript files.</li>
-    </ul>
-    <p>The <code>ClientApp</code> subdirectory is a standard React application based on the <code>create-react-app</code> template. If you open a command prompt in that directory, you can run <code>npm</code> commands such as <code>npm test</code> or <code>npm install</code>.</p>
-  </div>
-);
+class Home extends Component {
 
-export default connect()(Home);
+    constructor(props) {
+        super(props);
+        this.state = {
+            modal: false,
+            modalHeader: "",
+            modalSubheader: "",
+            modalYear: 0,
+            modalColor: "",
+            modalNotes: "",
+            modalDailyPrice: 0,
+            modalRentedDays: 0,
+            modalImage: ""
+        };
+
+        this.toggle = this.toggle.bind(this);
+        this.submitFormHandler = this.submitFormHandler.bind(this);
+    }
+
+    componentDidMount() {
+        this.ensureDataFetched();
+    }
+
+    componentDidUpdate() {
+        this.ensureDataFetched();
+    }
+
+    ensureDataFetched() {
+        const startDateIndex = parseInt(this.props.match.params.startDateIndex, 10) || 0;
+        this.props.requestWeatherForecasts(startDateIndex);
+    }
+
+    toggle(pId) {
+        var result = this.props.forecasts.find(forecast => (forecast.id === pId));        
+        this.setState(prevState => ({
+            modal: !prevState.modal,
+            modalHeader: result === undefined ? "" : result.brand,
+            modalSubheader: result === undefined ? "" : result.model,
+            modalYear: result === undefined ? 0 : result.year,
+            modalColor: result === undefined ? 0 : result.color,
+            modalNotes: result === undefined ? 0 : result.notes,
+            modalDailyPrice: result === undefined ? 0 : result.dailyPrice,
+            modalRentedDays: result === undefined ? 0 : result.rentedDays,
+            modalImage: result === undefined ? "" : result.imageSrc
+        }));
+    }
+
+    submitFormHandler(event, props) {
+        //event.preventDefault();
+        const data = new FormData(event.target);
+        var vehicleId = data.get('vehicleId');
+        var clientId = data.get('clientId');
+        this.props.postRentVehicle(vehicleId, clientId);
+        this.ensureDataFetched();
+    }
+
+    render() {
+        return (
+            <div>
+                <h1>Cars Rental</h1>
+                <p>We offer car rental suppliers find you the best price [change this copy]</p>                
+                <div>
+                    <Container fluid>
+                        <Row>
+                            {this.props.forecasts.map(forecast =>
+                                <Col sm="4">
+                                    <div>
+                                        <Card>
+                                            <CardImg top width="100%" src={forecast.imageSrc} onClick={() => this.toggle(forecast.id)} alt="Card image cap" />
+                                            <CardBody>
+                                                <CardTitle>{forecast.brand}</CardTitle>
+                                                <CardSubtitle>{forecast.model}</CardSubtitle>
+                                                <div>
+                                                    <Form onSubmit={this.submitFormHandler}>
+                                                        <FormGroup check row>
+                                                            <Label for="clientId">Select Client</Label>
+                                                            <Input type="select" name="clientId" id="clientId" required>
+                                                                {this.props.clients.map(client =>
+                                                                    <option value={client.id}>{client.name}</option>
+                                                                )}
+                                                            </Input>
+                                                            <Input type="text" name="vehicleId" id="vehicleId" value={forecast.id} hidden />
+                                                            <Button type="submit" color="success">Rent Vehicle</Button>
+                                                        </FormGroup>
+                                                    </Form> 
+                                                </div>                                                
+                                                <Modal isOpen={this.state.modal} toggle={this.toggle}>
+                                                    <ModalHeader>{this.state.modalHeader}</ModalHeader>
+                                                    <ModalBody>
+                                                        <Card>                                                            
+                                                            <CardBody>
+                                                                <CardTitle>{this.state.modalSubheader}</CardTitle>
+                                                                <CardText>Year: {this.state.modalYear}</CardText>
+                                                                <CardText>Color: {this.state.modalColor}</CardText>
+                                                                <CardText>Daily Price: {this.state.modalDailyPrice}</CardText>
+                                                                <CardText>Rented Days: {this.state.modalRentedDays}</CardText>
+                                                                <CardText>Notes: {this.state.modalNotes}</CardText>                                                            
+                                                                <CardImg bottom width="100%" src={this.state.modalImage} />
+                                                            </CardBody>
+                                                        </Card>
+                                                    </ModalBody>
+                                                    <ModalFooter>                                                        
+                                                        <Button color="secondary" onClick={this.toggle}>Close</Button>
+                                                    </ModalFooter>
+                                                </Modal>
+                                            </CardBody>
+                                        </Card>
+                                    </div>
+                                </Col>
+                            )}
+                        </Row>
+                    </Container>
+                </div>
+            </div>
+        );
+    }
+}
+
+export default connect(
+    state => state.weatherForecasts,
+    dispatch => bindActionCreators(actionCreators, dispatch)
+)(Home);
