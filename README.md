@@ -1,7 +1,14 @@
 # WeRentCar123
 
-## Step to run this application
 
-Git clone this repository
-Build solution using VS2017/2019
-F5 or click in run button
+## Steps
+
+- Clone Repository
+  - git clone https://github.com/vhsv90/WeRentCar123.git
+- Build Application
+- Run Application
+- Open Web Application using https://localhost:44380/
+
+## SQL
+
+The Database structure and dummy data will be autogenerate when the application run
